@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify
+      - run: pnpm build
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t mcp-remote-template .
+      - name: Smoke test the image
+        run: |
+          docker run -d --name mcp -p 3000:3000 \
+            -e PUBLIC_URL=http://localhost:3000 -e OWNER_PASSWORD=ci-password-123456 mcp-remote-template
+          for i in $(seq 1 20); do curl -fs localhost:3000/healthz && break; sleep 1; done
+          curl -fs localhost:3000/.well-known/oauth-authorization-server
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:3000/mcp)" = 401

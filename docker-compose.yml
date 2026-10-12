@@ -1,0 +1,8 @@
+services:
+  mcp:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3000}
+      OWNER_PASSWORD: ${OWNER_PASSWORD:?Set OWNER_PASSWORD in .env}

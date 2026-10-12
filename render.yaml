@@ -1,0 +1,14 @@
+# One-click deploy: https://render.com/deploy?repo=https://github.com/julian7204/mcp-remote-template
+services:
+  - type: web
+    name: mcp-remote-template
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: OWNER_PASSWORD
+        generateValue: true
+      - key: PUBLIC_URL
+        sync: false
+      - key: TRUST_PROXY
+        value: "1"
